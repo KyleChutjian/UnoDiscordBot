@@ -1,9 +1,9 @@
 const Discord = require('discord.js');
 const Command = require('./Command.js');
 const Event = require('./Event.js');
-const config = require('../Data/config.json')
+const config = require('../Data/config.json');
 const intents = new Discord.Intents(32767);
-const fs = require('fs') // fs = file system
+const fs = require('fs'); // fs = file system
 
 class Client extends Discord.Client {
     constructor() {
@@ -13,7 +13,6 @@ class Client extends Discord.Client {
          * @type {Discord.Collection<string, Command>}
          */
         this.commands = new Discord.Collection();
-
         this.prefix = config.prefix;
     }
 
