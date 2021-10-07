@@ -2,12 +2,12 @@ const Command = require('../Structures/Command.js');
 const Discord = require('discord.js');
 
 module.exports = new Command({
-    name: "test",
+    name: "sample",
     permission: "SEND_MESSAGES",
-    description: "Starts Uno",
+    description: "This is a sample command",
 
     async run(message, args, client) {
-        
+        message.channel.send('Sample Message');
     }
 
 });

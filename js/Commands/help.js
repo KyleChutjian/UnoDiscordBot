@@ -30,7 +30,6 @@ module.exports = new Command({
             .setThumbnail(client.user.avatarURL({dynamic:true}))
 
         message.author.send({embeds: [embed]})
-        message.channel.send({embeds: [embed]})
 
     }
 });
