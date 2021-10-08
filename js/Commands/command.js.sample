@@ -1,5 +1,5 @@
 const Command = require('../Structures/Command.js');
-const Discord = require('discord.js');
+const {Client, MessageEmbed} = require('discord.js');
 
 module.exports = new Command({
     name: "sample",
@@ -8,6 +8,7 @@ module.exports = new Command({
 
     async run(message, args, client) {
         message.channel.send('Sample Message');
+        const embed = new MessageEmbed();
     }
 
 });

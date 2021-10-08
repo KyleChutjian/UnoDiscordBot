@@ -1,5 +1,23 @@
 {
+    "players": {
+        "p1": [null, null],
+        "p2": [null, null],
+        "p3": [null, null],
+        "p4": [null, null],
+        "p5": [null, null],
+        "p6": [null, null]
+    },
+    "states": [
+        "WAITING",
+        "JOINING",
+        "PLAYING"
+    ],
+    "currentState": "WAITING",
     "direction": true,
+
+
+
+
     "7-0": false,
     "stacking": false,
     "continuousDrawing": false,
