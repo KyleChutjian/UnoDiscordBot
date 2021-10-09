@@ -24,12 +24,16 @@ module.exports = new Command({
                 UnoConfig.currentState = "JOINING";
                 break;
             case "JOINING":
+                if (UnoConfig.playerCount == 0 || UnoConfig.playerCount == 1) {
+                    embed.setTitle('Error!')
+                        .setDescription(`Need more players in order to start a game.`);
+                    break;
+                } 
                 for (player in UnoConfig.players) {
                     if (UnoConfig.players[player][1] != null) {
-                        playerList += player[1] + ". " + UnoConfig.players[player][1] + "\n";
+                        playerList += player[0] + ". " + UnoConfig.players[player][1] + "\n";
                     }
                 }
-
                 embed.setTitle('Game Start!')
                     .setDescription(`\*\*Player List:\*\*\n${playerList}`)
                 console.log(UnoConfig.players);

@@ -34,9 +34,13 @@ module.exports = new Command({
                 embed.setTitle('Game Stopped!')
                     .setDescription(`The game has stopped.\n
                     Type \`.start\` to start another game.`);
-                    for (player in UnoConfig.players) {
-                        UnoConfig.players[player] = [null, null];
-                    }
+                    UnoConfig.players = {
+                        
+                    };
+                    UnoConfig.playerCount = 0;
+                    // for (player in UnoConfig.players) {
+                    //     UnoConfig.players[player] = [null, null];
+                    // }
                     UnoConfig.currentState = "WAITING";
                 break;
         }
