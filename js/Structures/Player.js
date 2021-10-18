@@ -1,6 +1,11 @@
 const Card = require('../Structures/Card.js');
 
+
 class Player {
+    /**
+     * 
+     * @param {string,string} player 
+     */
     constructor(player) {
         this.id = player.id;
         this.username = player.username;
@@ -12,7 +17,15 @@ class Player {
 }
 
 function generateStartingHand() {
-    
+    return [
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+        new Card(Math.floor(Math.random() * 4),Math.floor(Math.random() * 15)),
+    ]
 }
 
 function draw(numberOfCards, card) {
@@ -24,3 +37,5 @@ function play(cardPlayed, newCard) {
     // newCard == card player trying to play
     
 }
+
+module.exports = Player;

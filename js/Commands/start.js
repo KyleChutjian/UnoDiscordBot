@@ -2,6 +2,8 @@ const Command = require('../Structures/Command.js');
 const {Client, MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction} = require('discord.js');
 const UnoConfig = require('../Data/uno.json');
 const Join = require('../Commands/join.js');
+const Game = require('../Structures/Game.js');
+const Player = require('../Structures/Player.js');
 
 module.exports = new Command({
     name: "start",
@@ -61,33 +63,30 @@ module.exports = new Command({
                 embed.setDescription(`${embed.description}
                 ${ButtonInteraction.user.username}`);
                 ButtonInteraction.message.edit({embeds: [embed]});
-                // Join.run(message, args, client);
                 join(message, args, client);
 
             } else if (id === 'start') {
                 ButtonInteraction.reply({
                     content: `${ButtonInteraction.user.username} has started the game!`,
                 })
+                UnoConfig.currentState = "PLAYING";
+                pregame();
+                console.log(UnoConfig.currentState);
             } else if (id === 'stop') {
                 ButtonInteraction.reply({
                     content: `${message.author.username} has stopped the game!`,
                 })
-
+                UnoConfig.currentState = "WAITING";
+                console.log(UnoConfig.currentState);
             }
             
 
         })
 
         collector.on('end', (collection) => {
-            collection.forEach((click) => {
-                console.log(click.user.username, click.customId);
-            })
-            if (collection.first()?.customId === 'start') {
-                // start the game here
-                
-            }
-            console.log(UnoConfig.players);
+            // console.log(UnoConfig.players);
             UnoConfig.currentState = "PLAYING";
+            pregame();
             message.channel.send('interaction end');
         })
 
@@ -95,46 +94,43 @@ module.exports = new Command({
 
 });
 
-function join(message, args, client) {
-    // const embed = new MessageEmbed();
-    // embed.setTitle('Error!')
-    //     .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
-    //     .setColor('RED')
-    //     .setThumbnail(client.user.avatarURL({dynamic:true}))
+function pregame() {
+    let players = [];
+    let currentPlayer = {};
+    switch (UnoConfig.currentState) {
+        case "WAITING", "JOINING":
+            console.log('cant do that now'); 
+            break;
 
-    
+        case "PLAYING":
+            for (player in UnoConfig.players) {
+                // console.log(player);
+                players.push(new Player({
+                    "id": UnoConfig.players[player][0],
+                    "username": UnoConfig.players[player][1],
+                }))
+            }
+
+            console.log(players);
+            // Game.gameLoop();
+
+
+    }
+}
+
+function join(message, args, client) {    
         switch (UnoConfig.currentState) {
+            case "JOINING":
+                if (Object.keys(UnoConfig.players).length <= 5) {
+                    UnoConfig.playerCount++;
+                    UnoConfig.players[UnoConfig.playerCount] = [message.author.id, message.author.username];
+                    // console.log("join:" + JSON.stringify(UnoConfig.players));
+                }
+                break;
             case "WAITING":
                 embed.setDescription('A game has not been started.\nType \`.start\` to start a game.');
                 message.channel.send({embeds: [embed]})
                 break;
-
-            case "JOINING":
-                console.log(Object.keys(UnoConfig.players).length);
-                if (Object.keys(UnoConfig.players).length <= 5) {
-                    UnoConfig.playerCount++;
-
-                    UnoConfig.players[UnoConfig.playerCount] = [message.author.id, message.author.username];
-                    console.log(UnoConfig.players[UnoConfig.playerCount]);
-                    // embed.setTitle('Player Joined!');
-                    // if (UnoConfig.playerCount == 1) {
-                    //     embed.setDescription(`Player ${UnoConfig.playerCount} has joined the game.\n
-                    //         There are ${6 - UnoConfig.playerCount} spots left.\n
-                    //         1 more player required to begin.`)
-                    // } else if (UnoConfig.playerCount == 6) {
-                    //     embed.setDescription(`Player ${UnoConfig.playerCount} has joined the game.\n
-                    //         There are 0 spots left.
-                    //         The game is starting!`);
-                    //     Start.run(message, args, client);
-                    // } else {
-                    //     embed.setDescription(`Player ${UnoConfig.playerCount} has joined the game.\n
-                    //         There are ${6 - UnoConfig.playerCount} spots left.\n`)
-                    // }
-
-                }
-                // message.channel.send({embeds: [embed]})
-                break;
-            
             case "PLAYING":
                 embed.setDescription('There is a game in progress.\nType \`.stop\` to stop the game.');
                 message.channel.send({embeds: [embed]})
@@ -147,3 +143,17 @@ function join(message, args, client) {
 
 
 }
+
+/*
+
+[P1, P2, P3, P4, P5, P6]
+[P2, P3, P4, P5, P6, P1]
+[P3, P4, P5, P6, P1, P2]
+[P4, P5, P6, P1, P2, P3]
+[P6, P1, P2, P3, P4, P5] // P4 plays skip
+[P5, P4, P3, P2, P1, P6] // P6 plays reverse
+[P4, P3, P2, P1, P6, P5]
+[P3, P2, P1, P6, P5, P4]
+[P4, P5, P6, P1, P2, P3] // P3 plays reverse
+
+*/

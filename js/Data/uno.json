@@ -1,8 +1,17 @@
 {
     "players": {
-
+        
     },
     "playerCount": 0,
+    "playerOrder": [
+        null,
+        null,
+        null,
+        null,
+        null,
+        null
+    ],
+
     "states": [
         "WAITING",
         "JOINING",
