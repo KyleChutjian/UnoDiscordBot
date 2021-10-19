@@ -13,7 +13,9 @@ class Card {
         this.value = getValue(value);
     }
 }
-
+function printCard() {
+    return color + value;
+}
 function getColor(colorInt) {
     switch (colorInt) {
         case 0:
@@ -46,8 +48,10 @@ function getValue(valueInt) {
         case 12:
             return "PLUSTWO";
         case 13:
+            color = "WILD";
             return "WILD";
         case 14:
+            color = "WILD";
             return "PLUSFOUR";
     }
 }

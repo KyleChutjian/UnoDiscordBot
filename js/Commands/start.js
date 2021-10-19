@@ -12,7 +12,6 @@ module.exports = new Command({
 
     async run(message, args, client) {
         let playerList = "";
-
         const embed = new MessageEmbed();
         embed.setColor('RED')
             .setThumbnail(client.user.avatarURL({dynamic:true}))
@@ -63,15 +62,15 @@ module.exports = new Command({
                 embed.setDescription(`${embed.description}
                 ${ButtonInteraction.user.username}`);
                 ButtonInteraction.message.edit({embeds: [embed]});
-                join(message, args, client);
+                join(message, args, client, ButtonInteraction);
 
             } else if (id === 'start') {
                 ButtonInteraction.reply({
                     content: `${ButtonInteraction.user.username} has started the game!`,
                 })
                 UnoConfig.currentState = "PLAYING";
-                pregame();
-                console.log(UnoConfig.currentState);
+                pregame(client);
+                // console.log(UnoConfig.currentState);
             } else if (id === 'stop') {
                 ButtonInteraction.reply({
                     content: `${message.author.username} has stopped the game!`,
@@ -86,7 +85,7 @@ module.exports = new Command({
         collector.on('end', (collection) => {
             // console.log(UnoConfig.players);
             UnoConfig.currentState = "PLAYING";
-            pregame();
+            pregame(client);
             message.channel.send('interaction end');
         })
 
@@ -94,7 +93,7 @@ module.exports = new Command({
 
 });
 
-function pregame() {
+function pregame(client) {
     let players = [];
     let currentPlayer = {};
     switch (UnoConfig.currentState) {
@@ -103,28 +102,34 @@ function pregame() {
             break;
 
         case "PLAYING":
+            let playerNumber = 0;
             for (player in UnoConfig.players) {
                 // console.log(player);
+                playerNumber++;
                 players.push(new Player({
                     "id": UnoConfig.players[player][0],
                     "username": UnoConfig.players[player][1],
+                    "playerNumber": playerNumber,
                 }))
             }
 
             console.log(players);
-            // Game.gameLoop();
+            // start the game
+            Game.turn(players, client, null);
+
 
 
     }
 }
 
-function join(message, args, client) {    
+function join(message, args, client, ButtonInteraction) {   
+    // ButtonInteraction.user.username 
         switch (UnoConfig.currentState) {
             case "JOINING":
                 if (Object.keys(UnoConfig.players).length <= 5) {
+                    UnoConfig.playerOrder[UnoConfig.playerCount] = UnoConfig.playerCount + 1;
                     UnoConfig.playerCount++;
-                    UnoConfig.players[UnoConfig.playerCount] = [message.author.id, message.author.username];
-                    // console.log("join:" + JSON.stringify(UnoConfig.players));
+                    UnoConfig.players[UnoConfig.playerCount] = [ButtonInteraction.user.id, ButtonInteraction.user.username];
                 }
                 break;
             case "WAITING":
