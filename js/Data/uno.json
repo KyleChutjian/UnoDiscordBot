@@ -6,6 +6,9 @@
     "playerOrder": [
 
     ],
+    "currentCardValue": "",
+    "currentCardColor": "ORANGE",
+    "currentCard": "RED.3",
     "currentPlayer": 1,
     "playerHands": {
         

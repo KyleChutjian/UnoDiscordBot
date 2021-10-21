@@ -25,9 +25,15 @@ function printCard(card) {
     return `${card.color[0]}:${card.value}`
 }
 
+
+
 function turn(players, client, playedCard) {
     if (players == null) {
         console.log(playedCard);
+
+        console.log(UnoConfig.playerHands['230502782623285248'])
+
+
         // type in uno channel which card was played, and 
         // if anything special happens ie. reverse/skip/+2/+4/wild 
         return;

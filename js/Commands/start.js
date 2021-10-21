@@ -4,6 +4,7 @@ const UnoConfig = require('../Data/uno.json');
 const Join = require('../Commands/join.js');
 const Game = require('../Structures/Game.js');
 const Player = require('../Structures/Player.js');
+const Card = require('../Structures/Card.js');
 
 module.exports = new Command({
     name: "start",
@@ -21,7 +22,7 @@ module.exports = new Command({
                 - Type \`.start\` to manually start the game.\n
                 - The game will automatically start if there are 6 players.\n
                 \*\*Current Players:\*\*`);
-                UnoConfig.currentState = "JOINING";
+        UnoConfig.currentState = "JOINING";
 
 
 
@@ -96,11 +97,11 @@ module.exports = new Command({
 function pregame(client) {
     let players = [];
     let currentPlayer = {};
+    // UnoConfig.currentCard = "RED.3";
     switch (UnoConfig.currentState) {
         case "WAITING", "JOINING":
             console.log('cant do that now'); 
             break;
-
         case "PLAYING":
             let playerNumber = 0;
             for (player in UnoConfig.players) {
@@ -130,6 +131,12 @@ function join(message, args, client, ButtonInteraction) {
                     UnoConfig.playerOrder[UnoConfig.playerCount] = UnoConfig.playerCount + 1;
                     UnoConfig.playerCount++;
                     UnoConfig.players[UnoConfig.playerCount] = [ButtonInteraction.user.id, ButtonInteraction.user.username];
+                    // UnoConfig.players[ButtonInteraction.user.id] = {
+                    //     "username": ButtonInteraction.user.username,
+                    //     "playerNumber": UnoConfig.playerCount,
+                    //     "hand": []
+                    // }
+                    console.log(UnoConfig.players)
                 }
                 break;
             case "WAITING":
