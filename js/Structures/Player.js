@@ -60,37 +60,12 @@ function getJSONCardString(colorInt, valueInt) {
 
 }
 
-/*
-
-playerHands = {
-    (player's id): {
-        1: "WILD",
-        2: "R0",
-        3: "YR",
-        4: "BS",
-        5: "GP",
-        6: "PLUSFOUR"
-    }
-    Full list of options:
-    R0-9, RR, RP, RS
-    B0-9, BR, BP, BS
-    Y0-9, YR, YP, YS
-    G0-9, GR, GP, GS
-    WILD, PLUSFOUR
-}
-
-*/
-
 function generateStartingHand(playerId) {
     let hand = [null, null, null, null, null, null, null];
     let color = 0;
     let value = 0;
     let cardNumber = 0;
-    // playerHands.push({
-    //     playerId: [
-            
-    //     ]
-    // })
+
     playerHands[playerId] = [];
 
 

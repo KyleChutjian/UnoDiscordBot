@@ -55,36 +55,46 @@ module.exports = new Command({
 
         collector.on('collect', async (ButtonInteraction) => {
             const id = ButtonInteraction.customId;
-            if (id === 'join') {
-                ButtonInteraction.reply({
-                    content: 'You joined the game!',
-                    ephemeral: true
-                })
-                embed.setDescription(`${embed.description}
-                ${ButtonInteraction.user.username}`);
-                ButtonInteraction.message.edit({embeds: [embed]});
-                join(message, args, client, ButtonInteraction);
 
-            } else if (id === 'start') {
+            if (!join(message,args,client,ButtonInteraction) && id === 'join') {
                 ButtonInteraction.reply({
-                    content: `${ButtonInteraction.user.username} has started the game!`,
-                })
-                UnoConfig.currentState = "PLAYING";
-                pregame(client);
-                // console.log(UnoConfig.currentState);
-            } else if (id === 'stop') {
-                ButtonInteraction.reply({
-                    content: `${message.author.username} has stopped the game!`,
-                })
-                UnoConfig.currentState = "WAITING";
-                console.log(UnoConfig.currentState);
+                    content:'You are already in the game!',
+                    ephemeral:true
+                });
+            } else {
+                if (id === 'join') {
+                    ButtonInteraction.reply({
+                        content: 'You joined the game!',
+                        ephemeral: true
+                    });
+                    embed.setDescription(`${embed.description}
+                    ${ButtonInteraction.user.username}`);
+                    ButtonInteraction.message.edit({embeds: [embed]});
+                    join(message, args, client, ButtonInteraction);
+    
+                } else if (id === 'start') {
+                    ButtonInteraction.reply({
+                        content: `${ButtonInteraction.user.username} has started the game!`,
+                    })
+                    UnoConfig.currentState = "PLAYING";
+                    pregame(client);
+                    // console.log(UnoConfig.currentState);
+                } else if (id === 'stop') {
+                    ButtonInteraction.reply({
+                        content: `${message.author.username} has stopped the game!`,
+                    })
+                    UnoConfig.currentState = "WAITING";
+                    console.log(UnoConfig.currentState);
+                }
             }
+
+
+
             
 
         })
 
         collector.on('end', (collection) => {
-            // console.log(UnoConfig.players);
             UnoConfig.currentState = "PLAYING";
             pregame(client);
             message.channel.send('interaction end');
@@ -96,27 +106,24 @@ module.exports = new Command({
 
 function pregame(client) {
     let players = [];
-    let currentPlayer = {};
-    // UnoConfig.currentCard = "RED.3";
     switch (UnoConfig.currentState) {
         case "WAITING", "JOINING":
             console.log('cant do that now'); 
             break;
         case "PLAYING":
-            let playerNumber = 0;
+            let currentCard = 0;
             for (player in UnoConfig.players) {
-                // console.log(player);
-                playerNumber++;
-                players.push(new Player({
-                    "id": UnoConfig.players[player][0],
-                    "username": UnoConfig.players[player][1],
-                    "playerNumber": playerNumber,
-                }))
+                currentCard = 0;
+                UnoConfig.players[player].hand.forEach(card => {
+                    UnoConfig.players[player].hand[currentCard] = getRandomCard();
+                    currentCard++;
+                })
+                
             }
 
-            console.log(players);
-            // start the game
-            Game.turn(players, client, null);
+            // console.log(UnoConfig.players);
+            // Game.setup();
+            Game.turn(client, null);
 
 
 
@@ -124,20 +131,24 @@ function pregame(client) {
 }
 
 function join(message, args, client, ButtonInteraction) {   
-    // ButtonInteraction.user.username 
         switch (UnoConfig.currentState) {
             case "JOINING":
-                if (Object.keys(UnoConfig.players).length <= 5) {
-                    UnoConfig.playerOrder[UnoConfig.playerCount] = UnoConfig.playerCount + 1;
-                    UnoConfig.playerCount++;
-                    UnoConfig.players[UnoConfig.playerCount] = [ButtonInteraction.user.id, ButtonInteraction.user.username];
-                    // UnoConfig.players[ButtonInteraction.user.id] = {
-                    //     "username": ButtonInteraction.user.username,
-                    //     "playerNumber": UnoConfig.playerCount,
-                    //     "hand": []
-                    // }
-                    console.log(UnoConfig.players)
+                if (UnoConfig.players.hasOwnProperty(ButtonInteraction.user.id)) {
+                    return false;
+                } else {
+                    if (Object.keys(UnoConfig.players).length <= 5) {
+                        UnoConfig.playerOrder[UnoConfig.playerCount] = UnoConfig.playerCount + 1;
+                        UnoConfig.playerCount++;
+                        UnoConfig.players[ButtonInteraction.user.id] = {
+                            "username": ButtonInteraction.user.username,
+                            "playerNumber": UnoConfig.playerCount,
+                            "hand": [null, null, null, null, null, null, null]
+                        }
+                    }
+                    return true;
                 }
+
+
                 break;
             case "WAITING":
                 embed.setDescription('A game has not been started.\nType \`.start\` to start a game.');
@@ -148,13 +159,43 @@ function join(message, args, client, ButtonInteraction) {
                 message.channel.send({embeds: [embed]})
                 break;
         }
-
-
-
-
-
-
 }
+
+function getRandomCard() {
+    const possibleCards = [
+        'RED.0', 'RED.1', 'RED.1', 'RED.2', 'RED.2', 'RED.3', 'RED.3', 'RED.4', 'RED.4', 'RED.5', 'RED.5', 'RED.6', 'RED.6', 'RED.7', 'RED.7', 'RED.8', 'RED.8', 'RED.9', 'RED.9',
+        'RED.SKIP', 'RED.SKIP', 'RED.PLUSTWO', 'RED.PLUSTWO', 'RED.REVERSE', 'RED.REVERSE',
+        'BLUE.0', 'BLUE.1', 'BLUE.1', 'BLUE.2', 'BLUE.2', 'BLUE.3', 'BLUE.3', 'BLUE.4', 'BLUE.4', 'BLUE.5','BLUE.5', 'BLUE.6', 'BLUE.6', 'BLUE.7', 'BLUE.7', 'BLUE.8', 'BLUE.8', 'BLUE.9', 'BLUE.9',
+        'BLUE.SKIP', 'BLUE.SKIP', 'BLUE.PLUSTWO', 'BLUE.PLUSTWO', 'BLUE.REVERSE', 'BLUE.REVERSE',
+        'YELLOW.0', 'YELLOW.1', 'YELLOW.1', 'YELLOW.2', 'YELLOW.2', 'YELLOW.3', 'YELLOW.3', 'YELLOW.4', 'YELLOW.4', 'YELLOW.5','YELLOW.5', 'YELLOW.6', 'YELLOW.6', 'YELLOW.7', 'YELLOW.7', 'YELLOW.8', 'YELLOW.8', 'YELLOW.9', 'YELLOW.9',
+        'YELLOW.SKIP', 'YELLOW.SKIP', 'YELLOW.PLUSTWO', 'YELLOW.PLUSTWO', 'YELLOW.REVERSE', 'YELLOW.REVERSE',
+        'GREEN.0', 'GREEN.1', 'GREEN.1', 'GREEN.2', 'GREEN.2', 'GREEN.3', 'GREEN.3', 'GREEN.4', 'GREEN.4', 'GREEN.5','GREEN.5', 'GREEN.6', 'GREEN.6', 'GREEN.7', 'GREEN.7', 'GREEN.8', 'GREEN.8', 'GREEN.9', 'GREEN.9',
+        'GREEN.SKIP', 'GREEN.SKIP', 'GREEN.PLUSTWO', 'GREEN.PLUSTWO', 'GREEN.REVERSE', 'GREEN.REVERSE',
+        'WILD.WILD', 'WILD.WILD', 'WILD.WILD', 'WILD.WILD', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 
+    ]
+    return possibleCards[Math.floor(Math.random()*possibleCards.length)]
+}
+/*
+
+playerHands = {
+    (player's id): {
+        1: "WILD",
+        2: "R0",
+        3: "YR",
+        4: "BS",
+        5: "GP",
+        6: "PLUSFOUR"
+    }
+    Full list of options:
+    R0-9, RR, RP, RS
+    B0-9, BR, BP, BS
+    Y0-9, YR, YP, YS
+    G0-9, GR, GP, GS
+    WILD, PLUSFOUR
+}
+
+*/
+
 
 /*
 

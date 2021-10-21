@@ -33,6 +33,7 @@ module.exports = new Command({
 
         
         message.channel.send({embeds: [embed]});
+
         Game.turn(null, client, args);
     }
 
