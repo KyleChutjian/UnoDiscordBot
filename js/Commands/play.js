@@ -65,7 +65,7 @@ function isCardPlayable(playedCard, message, client) {
     card = UnoConfig.players[message.author.id].hand[cardNumber-1];
     const playedCardColor = card.split('.')[0];
     const playedCardValue = card.split('.')[1];
-    console.log(`${UnoConfig.currentCard}`);
+    // console.log(`${UnoConfig.currentCard}`);
 
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
@@ -124,9 +124,9 @@ function isCardPlayable(playedCard, message, client) {
         
     } else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
         console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
-        console.log(playedCardColor + "    " + playedCardValue);
-        console.log(UnoConfig.playerOrder);
-
+        // console.log(playedCardColor + "    " + playedCardValue);
+        // console.log(UnoConfig.playerOrder);
+        
         Game.getNextPlayer();
 
 

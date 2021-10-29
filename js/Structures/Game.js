@@ -10,16 +10,12 @@ let players = [];
 
 function turn(client, playedCard) {
     if (UnoConfig.currentState != "PLAYING") return;
-    console.log('-------start of game function----------');
 
-    // establish the first card here
-    // UnoConfig.currentCard = "RED.SKIP"; // placeholder
     if (UnoConfig.currentCard == null) {
         UnoConfig.currentCard = getRandomCard();
     }
     
     let currentColor = "";
-    console.log(UnoConfig.currentCard);
     switch (UnoConfig.currentCard.split('.')[0]) {
         case "RED":
         case "BLUE":
@@ -28,7 +24,6 @@ function turn(client, playedCard) {
             currentColor = UnoConfig.currentCard.split('.')[0];
             break;
         default:
-            // console.log(UnoConfig.currentCard.split('.')[0]);
             currentColor = 'WHITE'; // for setColor 
     }
 
@@ -160,9 +155,9 @@ function getCardImageLink(card) {
 
 function getNextPlayer() {
     // [1, 2, 3] => [2, 3, 1]
-    console.log(UnoConfig.playerOrder);
+    // console.log(UnoConfig.playerOrder);
     UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
-    console.log(UnoConfig.playerOrder);
+    // console.log(UnoConfig.playerOrder);
 
 
     // if (UnoConfig.direction) {
@@ -183,6 +178,7 @@ function resetGame() {
     playerList = "";
 }
 
+module.exports.getCardImageLink = getCardImageLink;
 module.exports.getNextPlayer = getNextPlayer;
 module.exports.resetGame = resetGame;
 module.exports.getRandomCard = getRandomCard;
