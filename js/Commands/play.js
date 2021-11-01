@@ -18,6 +18,7 @@ module.exports = new Command({
             return;
         }
         const outcome = isCardPlayable(args[1],message, client)
+        // NOT wild/+4
         if (outcome == 1) {
             card = Game.printCard(Game.getCardFromIndex(args[1],message.author.id));
             embed.setColor('GREEN')
@@ -29,20 +30,15 @@ module.exports = new Command({
                 .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
                 .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
                 .setDescription(`${message.author.username} has played a ${Game.printCard(Game.getCardFromIndex(args[1],message.author.id))}`);
-
-            client.channels.fetch(UnoConfig.channelId).then(channel => {
-                // channel.send({embeds:[channelEmbed]});
-            });
             UnoConfig.currentCard = Game.getCardFromIndex(args[1], message.author.id);
             Game.removeCard(args[1].split('d')[1], message.author.id);
             Game.turn(client);
+        // INVALID 
         } else if (outcome == -1) {
             embed.setColor('RED')
                 .setTitle('Invalid!')
                 .setDescription(`Please type \`.play card[number]\` to play a card.`);
-        } else {
-            return;
-        }
+        } else {return}
         
         message.channel.send({embeds: [embed]});
     }
@@ -51,21 +47,16 @@ module.exports = new Command({
 
 // checking if card can be played
 function isCardPlayable(playedCard, message, client) {
-    if (playedCard == null || playedCard.toLowerCase() == 'card' || !playedCard.toLowerCase().startsWith('card')) {
-        console.log('invalid')
-        return -1;
-    } else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {
-        console.log('number too high');
-        return -1;
-    }
-    // check if card is in player's hands
+    // INVALID
+    if (playedCard == null || playedCard.toLowerCase() == 'card' || !playedCard.toLowerCase().startsWith('card')) {return -1;} else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {return -1;}
+    
+    // "card4" => 4 => "RED" and "3"
     cardNumber = playedCard.split('d')[1];
-    const currentCardColor = UnoConfig.currentCard.split('.')[0];
-    const currentCardValue = UnoConfig.currentCard.split('.')[1];
     card = UnoConfig.players[message.author.id].hand[cardNumber-1];
     const playedCardColor = card.split('.')[0];
     const playedCardValue = card.split('.')[1];
-    // console.log(`${UnoConfig.currentCard}`);
+    const currentCardColor = UnoConfig.currentCard.split('.')[0];
+    const currentCardValue = UnoConfig.currentCard.split('.')[1];
 
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
@@ -111,25 +102,15 @@ function isCardPlayable(playedCard, message, client) {
                 .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
                 .setDescription(`${message.author.username} has played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
 
-            client.channels.fetch(UnoConfig.channelId).then(channel => {
-                // channel.send({embeds:[channelEmbed]});
-            });
-            // UnoConfig.currentCard = Game.getCardFromIndex(playedCard, message.author.id);
+
             Game.removeCard(playedCard.split('d')[1], message.author.id);
-            Game.getNextPlayer();
+            Game.getNextPlayer(card);
             Game.turn(client);
             return 0; 
-        })
-
-        
+        });
     } else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
         console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
-        // console.log(playedCardColor + "    " + playedCardValue);
-        // console.log(UnoConfig.playerOrder);
-        
-        Game.getNextPlayer();
-
-
+        Game.getNextPlayer(card);
         return 1;
     } else {
         console.log('not playable');

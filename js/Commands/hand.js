@@ -20,8 +20,6 @@ module.exports = new Command({
             default:
                 currentColor = 'WHITE'; // for setColor 
         }
-
-        console.log(Game.getCardFromIndex(UnoConfig.currentCard, message.author.id))
         const embed = new MessageEmbed();
         embed.setTitle(`${message.author.username}'s hand`)
             .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))

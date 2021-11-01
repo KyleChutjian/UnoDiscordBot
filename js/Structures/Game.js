@@ -13,6 +13,32 @@ function turn(client, playedCard) {
 
     if (UnoConfig.currentCard == null) {
         UnoConfig.currentCard = getRandomCard();
+
+        switch (UnoConfig.currentCard.split('.')[1]) {
+            case "REVERSE":
+                UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
+                break;
+            case "PLUSTWO":
+                for (player in UnoConfig.players) {
+                    if (UnoConfig.players[player].playerNumber == 1) {
+                        UnoConfig.players[player].hand.push(getRandomCard());
+                        UnoConfig.players[player].hand.push(getRandomCard());
+                    }
+                }
+                break;
+            case "SKIP":
+                UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+                break;
+            case "WILD":
+                break;
+            case "PLUSFOUR":
+                break;
+        }
+
+
+        if (UnoConfig.currentCard.split('.')[0] == "WILD") {
+            UnoConfig.currentCard = getRandomCard();
+        } 
     }
     
     let currentColor = "";
@@ -45,7 +71,7 @@ function turn(client, playedCard) {
             currentPlayer.hand.forEach(card => {
                 cardNumber++;
                 embed.addField(`card${cardNumber}`,printCard(card),true);
-            })
+            });
             const row = new MessageActionRow().addComponents(
                 new MessageButton()
                     .setCustomId('draw')
@@ -54,6 +80,61 @@ function turn(client, playedCard) {
             );
             // sends private message
             client.users.cache.get(player).send({embeds: [embed]});
+
+            if (UnoConfig.currentCard == "WILD.WILD") {
+                const chooseColorEmbed = new MessageEmbed();
+                chooseColorEmbed.setTitle('Choose a Color!')
+                    .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+                    .setColor('WHITE')
+                    .setDescription(`You played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}!\n
+                    What color do you want it to be?
+                    `);
+                const filter = (interaction) => {return true;}
+                const chooseColorRow = new MessageActionRow().addComponents(
+                    new MessageButton()
+                        .setCustomId('BLUE')
+                        .setLabel('Blue')
+                        .setStyle('PRIMARY'),
+                    new MessageButton()
+                        .setCustomId('RED')
+                        .setLabel('Red')
+                        .setStyle('DANGER'),
+                    new MessageButton()
+                        .setCustomId('GREEN')
+                        .setLabel('Green')
+                        .setStyle('SUCCESS'),
+                    new MessageButton()
+                        .setCustomId('YELLOW')
+                        .setLabel('Yellow')
+                        .setStyle('SECONDARY')
+                );
+                message.channel.send({embeds: [chooseColorEmbed], components: [chooseColorRow]});
+                let collector = message.channel.createMessageComponentCollector({filter,max:1});
+        
+                collector.on('collect', async (ButtonInteraction) => {
+                    let newColor = ButtonInteraction.customId.toLowerCase();
+                    newColor = newColor.charAt(0).toUpperCase() + newColor.slice(1, newColor.length);
+                    ButtonInteraction.reply(`You picked ${newColor}`);
+                    const id = ButtonInteraction.customId;
+                    UnoConfig.currentCard = `${ButtonInteraction.customId}.${playedCardValue}`;
+                });
+                collector.on('end', (collection) => {
+                    const channelEmbed = new MessageEmbed();
+                    channelEmbed.setColor('GREEN')
+                        .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+                        .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+                        .setDescription(`${message.author.username} has played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
+        
+        
+                    Game.removeCard(playedCard.split('d')[1], message.author.id);
+                    Game.getNextPlayer(card);
+                    Game.turn(client);
+                    return 0; 
+                });
+            }
+
+
+
             
             // start making embed that sends in this channel
             const embed2 = new MessageEmbed();
@@ -153,17 +234,58 @@ function getCardImageLink(card) {
     return imageLink;
 }
 
-function getNextPlayer() {
+// "RED.REVERSE" => Reverse playerOrder Array, etc
+function getNextPlayer(card) {
     // [1, 2, 3] => [2, 3, 1]
     // console.log(UnoConfig.playerOrder);
-    UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
-    // console.log(UnoConfig.playerOrder);
+    const playedCardColor = card.split('.')[0];
+    const playedCardValue = card.split('.')[1];
+    console.log(playedCardValue);
+    switch (playedCardValue) {
+        case "REVERSE":
+            // reverse array
+            console.log(UnoConfig.playerOrder);
+            UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
+            console.log(UnoConfig.playerOrder);
+            break;
+        case "PLUSTWO":
+            // add two cards to next player's hand
+            console.log('+2:');
+            for (player in UnoConfig.players) {
+                if (UnoConfig.players[player].playerNumber == UnoConfig.playerOrder[1]) {
+                    console.log(UnoConfig.players[player].hand);
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    console.log(UnoConfig.players[player].hand);
+                }
+            }
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+            break;
+        case "PLUSFOUR":
+            // add four cards to next player's hand
+            console.log('+4:');
+            for (player in UnoConfig.players) {
+                if (player.playerNumber == UnoConfig.playerOrder[1]) {
+                    console.log(`${UnoConfig.players[player].username} has to draw 4.`);
+                    console.log(UnoConfig.players[player].hand);
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    UnoConfig.players[player].hand.push(getRandomCard());
+                    console.log(UnoConfig.players[player].hand);
+                }
+            }
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+            break;
+        case "SKIP":
+            // skips over one player in playerOrder
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+            break;
+        default:
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+    }
 
-
-    // if (UnoConfig.direction) {
-    //     UnoConfig.playerOrder[UnoConfig.currentPlayer]
-
-    // }
 }
 
 // resets configs
