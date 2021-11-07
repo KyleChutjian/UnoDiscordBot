@@ -1,12 +1,8 @@
 const Card = require('../Structures/Card.js');
 const UnoConfig = require('../Data/uno.json');
 const Player = require('../Structures/Player.js');
-const { MessageEmbed, MessageActionRow, MessageButton } = require('discord.js');
+const { MessageEmbed, MessageActionRow, MessageButton, CommandInteractionOptionResolver } = require('discord.js');
 let players = [];
-
-
-
-
 
 function turn(client, playedCard) {
     if (UnoConfig.currentState != "PLAYING") return;
@@ -56,7 +52,8 @@ function turn(client, playedCard) {
     for (player in UnoConfig.players) {
         if (UnoConfig.playerOrder[0] === UnoConfig.players[player].playerNumber) {
             let currentPlayer = UnoConfig.players[player];
-            console.log(`It is ${currentPlayer.username}'s turn!`);
+
+            console.log(`\nIt is ${currentPlayer.username}'s turn!`);
 
             const embed = new MessageEmbed();
             embed.setTitle(`Player ${currentPlayer.playerNumber}'s turn!`)
@@ -81,6 +78,7 @@ function turn(client, playedCard) {
             // sends private message
             client.users.cache.get(player).send({embeds: [embed]});
 
+            // This only happens once, if the first card is a wild
             if (UnoConfig.currentCard == "WILD.WILD") {
                 const chooseColorEmbed = new MessageEmbed();
                 chooseColorEmbed.setTitle('Choose a Color!')
@@ -106,8 +104,8 @@ function turn(client, playedCard) {
                     new MessageButton()
                         .setCustomId('YELLOW')
                         .setLabel('Yellow')
-                        .setStyle('SECONDARY')
-                );
+                        .setStyle('SECONDARY'));
+                
                 message.channel.send({embeds: [chooseColorEmbed], components: [chooseColorRow]});
                 let collector = message.channel.createMessageComponentCollector({filter,max:1});
         
@@ -178,13 +176,15 @@ function printCard(card) {
 
 // "card7" => "RED.7"
 function getCardFromIndex(card, playerId) {
+    if (UnoConfig.players[playerId].hand.length == 1) {
+        return UnoConfig.players[playerId].hand[card.split('d')[1]-1];
+    }
     return UnoConfig.players[playerId].hand[card.split('d')[1]-1];
 }
 
 // removes cardNumber (not index) from specified player
 function removeCard(cardNumber, playerId) {
     UnoConfig.players[playerId].hand.splice(cardNumber - 1, 1);
-    // console.log(UnoConfig.players[playerId].hand);
 }
 
 // "RED" => "Red"
@@ -215,13 +215,12 @@ function getCardImageLink(card) {
     let cardValue = card.split('.')[1].toLowerCase();
     let imageLink = "https://raw.githubusercontent.com/Exium1/UnoBot/master/assets/images/defaultCards/";
     imageLink += cardColor;
-
     switch (cardValue) {
         case "plustwo":
             imageLink += 'draw2';
             break;
         case "plusfour":
-            imageLink += 'draw4';
+            imageLink += 'wilddraw4';
             break;
         case "wild":
             imageLink += 'wild';
@@ -230,51 +229,42 @@ function getCardImageLink(card) {
             imageLink += cardValue;
     }
     imageLink += '.png';
-    // console.log(imageLink);
+    // console.log(imageLink); // used for debugging a broken image
     return imageLink;
 }
 
 // "RED.REVERSE" => Reverse playerOrder Array, etc
 function getNextPlayer(card) {
     // [1, 2, 3] => [2, 3, 1]
-    // console.log(UnoConfig.playerOrder);
     const playedCardColor = card.split('.')[0];
     const playedCardValue = card.split('.')[1];
-    console.log(playedCardValue);
     switch (playedCardValue) {
         case "REVERSE":
             // reverse array
-            console.log(UnoConfig.playerOrder);
             UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
-            console.log(UnoConfig.playerOrder);
             break;
         case "PLUSTWO":
-            // add two cards to next player's hand
-            console.log('+2:');
             for (player in UnoConfig.players) {
                 if (UnoConfig.players[player].playerNumber == UnoConfig.playerOrder[1]) {
-                    console.log(UnoConfig.players[player].hand);
+                    console.log(`${UnoConfig.players[player].username} has to draw 2.`);
                     UnoConfig.players[player].hand.push(getRandomCard());
                     UnoConfig.players[player].hand.push(getRandomCard());
-                    console.log(UnoConfig.players[player].hand);
                 }
             }
             UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
             break;
         case "PLUSFOUR":
-            // add four cards to next player's hand
-            console.log('+4:');
             for (player in UnoConfig.players) {
-                if (player.playerNumber == UnoConfig.playerOrder[1]) {
+                if (UnoConfig.players[player].playerNumber == UnoConfig.playerOrder[1]) {
                     console.log(`${UnoConfig.players[player].username} has to draw 4.`);
-                    console.log(UnoConfig.players[player].hand);
                     UnoConfig.players[player].hand.push(getRandomCard());
                     UnoConfig.players[player].hand.push(getRandomCard());
                     UnoConfig.players[player].hand.push(getRandomCard());
                     UnoConfig.players[player].hand.push(getRandomCard());
-                    console.log(UnoConfig.players[player].hand);
                 }
             }
+            UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
             UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
             break;
         case "SKIP":
@@ -293,7 +283,7 @@ function resetGame() {
     UnoConfig.players = new Object;
     UnoConfig.playerCount = 0;
     UnoConfig.playerOrder = [];
-    // UnoConfig.currentPlayer = 1;
+    UnoConfig.currentCard = null;
     UnoConfig.currentState = "WAITING";
     UnoConfig.direction = true;
     UnoConfig.channelId = null;

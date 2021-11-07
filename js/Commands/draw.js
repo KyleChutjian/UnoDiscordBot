@@ -9,30 +9,39 @@ module.exports = new Command({
 
     async run(message, args, client) {
         const embed = new MessageEmbed();
+        embed.setTitle(`Success!`)
+            .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+            .setColor('GREEN');
 
+
+
+        const denyEmbed = new MessageEmbed();
+            denyEmbed.setTitle('Invalid!')
+                .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+                .setColor('RED');
         switch (UnoConfig.currentState) {
             case "WAITING":
             case "JOINING":
-                // send embedded message saying a game has not been started.
+                denyEmbed.setDescription('There is no ongoing game yet!');
+                message.channel.send({embeds:[denyEmbed]});
                 return;
             case "PLAYING":
-                if (!UnoConfig.players[message.author.id].playerNumber == UnoConfig.playerOrder[0]) {
-                    // send an embedded message saying it is not your turn
+                if (!(UnoConfig.players[message.author.id].playerNumber == UnoConfig.playerOrder[0])) {
+                    const denyEmbed = new MessageEmbed();
+                    denyEmbed.setDescription(`You cannot draw a card when it is not your turn!`);
+                    message.channel.send({embeds: [denyEmbed]});
+                } else {
+                    console.log('DRAW ELSE');
+                    // let card = getRandomCard(); //how its supposed to be
+                    let card = "WILD.PLUSFOUR"; // manually set a card for testing purposes
+                    embed.setDescription(`You drew a ${printCard(card)}`);
+                    message.channel.send({embeds: [embed]});
+                    UnoConfig.players[message.author.id].hand.push(card);
                 }
         }
 
 
-        embed.setTitle(`Success!`)
-        .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
-        .setColor('GREEN')
 
-        // let card = getRandomCard(); 
-        let card = "WILD.WILD";
-        
-        embed.setDescription(`You drew a ${printCard(card)}`);
-        message.channel.send({embeds: [embed]});
-        UnoConfig.players[message.author.id].hand.push(card);
-        console.log(UnoConfig.players[message.author.id]);
     }
 
     

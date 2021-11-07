@@ -15,6 +15,8 @@ module.exports = new Command({
         let playerList = "";
         UnoConfig.channelId = message.channel.id;
         const embed = new MessageEmbed();
+        console.log(embed);
+
         embed.setColor('RED')
             .setThumbnail(client.user.avatarURL({dynamic:true}))
             .setTitle('A New Game is Starting!')
@@ -46,7 +48,8 @@ module.exports = new Command({
         const filter = (interaction) => {
             return true;
         }
-        let collector = message.channel.createMessageComponentCollector({filter, max: 6}); //  
+        let collector = message.channel.createMessageComponentCollector({filter, max: 6});
+        
         collector.on('collect', async (ButtonInteraction) => {
             const id = ButtonInteraction.customId;
             if (UnoConfig.players.hasOwnProperty(ButtonInteraction.user.id) && id === 'join') {
@@ -90,6 +93,7 @@ module.exports = new Command({
             UnoConfig.currentState = "PLAYING";
             pregame(client);
             message.channel.send('interaction end');
+            collector.stop();
         })
 
     }
@@ -121,7 +125,6 @@ function join(message, args, client, ButtonInteraction) {
         switch (UnoConfig.currentState) {
             case "JOINING":
                 if (UnoConfig.players.hasOwnProperty(ButtonInteraction.user.id)) {
-                    console.log('user already inputted');
                     return false;
                 } else {
                     if (Object.keys(UnoConfig.players).length <= 5) {
@@ -131,6 +134,7 @@ function join(message, args, client, ButtonInteraction) {
                             "username": ButtonInteraction.user.username,
                             "playerNumber": UnoConfig.playerCount,
                             "hand": [null, null, null, null, null, null, null]
+                            // "hand": [null, null] // for testing win condition
                         }
                     }
                     return true;
