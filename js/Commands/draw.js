@@ -1,6 +1,7 @@
 const Command = require('../Structures/Command.js');
-const {Client, MessageEmbed} = require('discord.js');
+const {Client, MessageEmbed, MessageActionRow, ButtonInteraction, MessageButton} = require('discord.js');
 const UnoConfig = require('../Data/uno.json');
+const Game = require('../Structures/Game.js');
 
 module.exports = new Command({
     name: "draw",
@@ -31,12 +32,77 @@ module.exports = new Command({
                     denyEmbed.setDescription(`You cannot draw a card when it is not your turn!`);
                     message.channel.send({embeds: [denyEmbed]});
                 } else {
-                    console.log('DRAW ELSE');
-                    // let card = getRandomCard(); //how its supposed to be
-                    let card = "WILD.PLUSFOUR"; // manually set a card for testing purposes
+                    let card = getRandomCard();
                     embed.setDescription(`You drew a ${printCard(card)}`);
-                    message.channel.send({embeds: [embed]});
-                    UnoConfig.players[message.author.id].hand.push(card);
+
+
+
+
+
+
+                
+
+                    if (isCardPlayable(card)) {
+                        const filter = (interaction) => {return true;}
+                        const drawCardRow = new MessageActionRow().addComponents(
+                            new MessageButton()
+                                .setCustomId('PLAY')
+                                .setLabel('Play')
+                                .setStyle('PRIMARY'),
+                            new MessageButton()
+                                .setCustomId('KEEP')
+                                .setLabel('Keep')
+                                .setStyle('SECONDARY'));
+
+                        embed.setDescription(embed.description + `\nPlay the ${printCard(card)}?`);
+                        message.channel.send({embeds: [embed], components: [drawCardRow]});
+
+                        let collector = message.channel.createMessageComponentCollector({filter,max:1});
+                    
+                        collector.on('collect', async (ButtonInteraction) => {
+                            if (ButtonInteraction.customId == 'PLAY') {
+                                const outcome = Game.isDrawedCardPlayable(card, message, client);
+                                if (outcome == 1) {
+                                    console.log(1);
+                                    embed.setColor('GREEN')
+                                        .setTitle('Success!')
+                                        .setDescription(`You played a ${card}`);
+                        
+                                    const channelEmbed = new MessageEmbed();
+                                    channelEmbed.setColor('GREEN')
+                                        .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+                                        .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+                                        .setDescription(`${message.author.username} has played a ${Game.printCard(card)}`);
+                                    UnoConfig.currentCard = card;
+                                    Game.getNextPlayer(card)
+                                    Game.turn(client, card);
+                                } else {return}
+
+
+
+
+
+                                UnoConfig.currentCard = card;
+                                Game.getNextPlayer(card);
+                                Game.turn(client, card);
+                                ButtonInteraction.reply(`You played the ${printCard(card)}!`)
+
+                            } else if (ButtonInteraction.customId == 'KEEP') {
+                                ButtonInteraction.reply(`You kept the ${printCard(card)}.`)
+                                Game.getNextPlayer("NULL.NULL");
+                                UnoConfig.players[message.author.id].hand.push(card);
+                                Game.turn(client, null);
+                            }
+                        })
+                    } else {
+                        message.channel.send({embeds: [embed]});
+                        UnoConfig.players[message.author.id].hand.push(card);
+                        Game.getNextPlayer("NULL.NULL");
+                        Game.turn(client, null);
+                    }
+
+
+                    
                 }
         }
 
@@ -46,7 +112,35 @@ module.exports = new Command({
 
     
 });
-// RED.3 format:
+
+function isCardPlayable(card) {
+
+    const drawCardColor = card.split('.')[0];
+    const drawCardValue = card.split('.')[1];
+    const currentCardColor = UnoConfig.currentCard.split('.')[0];
+    const currentCardValue = UnoConfig.currentCard.split('.')[1];
+
+    if (drawCardColor == currentCardColor || drawCardValue == currentCardValue || drawCardColor == 'WILD') {
+        console.log(`A ${printCard(card)} is playable on a ${printCard(UnoConfig.currentCard)}`);
+        return true;
+    } else {
+        console.log(`A ${printCard(card)} is not playable on a ${printCard(UnoConfig.currentCard)}`);
+        return false;
+    }
+
+}
+    /*
+        else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
+        console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
+        Game.getNextPlayer(card);
+        return 1;
+    } 
+
+
+    */
+
+
+// RED.3 => Red 3
 function printCard(card) {
     let cardColor = card.split('.')[0];
     let cardValue = card.split('.')[1];
@@ -89,5 +183,6 @@ function getRandomCard() {
         'GREEN.SKIP', 'GREEN.SKIP', 'GREEN.PLUSTWO', 'GREEN.PLUSTWO', 'GREEN.REVERSE', 'GREEN.REVERSE',
         'WILD.WILD', 'WILD.WILD', 'WILD.WILD', 'WILD.WILD', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 'WILD.PLUSFOUR', 
     ]
+    // return "WILD.PLUSFOUR"; // For manually set draw card for testing purposes 
     return possibleCards[Math.floor(Math.random()*possibleCards.length)]
 }

@@ -19,7 +19,7 @@ module.exports = new Command({
                 .setDescription(`It is Player ${UnoConfig.playerOrder[0]}'s turn!'`);
             return;
         }
-        const outcome = isCardPlayable(args[1],message, client)
+        const outcome = Game.isCardPlayable(args[1],message, client)
         if (outcome == 1 && UnoConfig.players[message.author.id].hand.length == 1) {
             console.log(`${UnoConfig.players[message.author.id].username} wins`);
             embed.setColor('GREEN')
@@ -73,74 +73,74 @@ module.exports = new Command({
 });
 
 // checking if card can be played
-function isCardPlayable(playedCard, message, client) {
-    // INVALID
-    if (playedCard == null || playedCard.toLowerCase() == 'card' || !playedCard.toLowerCase().startsWith('card')) {return -1;} else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {return -1;}
+// function isCardPlayable(playedCard, message, client) {
+//     // INVALID
+//     if (playedCard == null || playedCard.toLowerCase() == 'card' || !playedCard.toLowerCase().startsWith('card')) {return -1;} else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {return -1;}
     
-    // "card4" => 4 => "RED" and "3"
-    cardNumber = playedCard.split('d')[1];
-    card = UnoConfig.players[message.author.id].hand[cardNumber-1];
-    const playedCardColor = card.split('.')[0];
-    const playedCardValue = card.split('.')[1];
-    const currentCardColor = UnoConfig.currentCard.split('.')[0];
-    const currentCardValue = UnoConfig.currentCard.split('.')[1];
+//     // "card4" => 4 => "RED" and "3"
+//     cardNumber = playedCard.split('d')[1];
+//     card = UnoConfig.players[message.author.id].hand[cardNumber-1];
+//     const playedCardColor = card.split('.')[0];
+//     const playedCardValue = card.split('.')[1];
+//     const currentCardColor = UnoConfig.currentCard.split('.')[0];
+//     const currentCardValue = UnoConfig.currentCard.split('.')[1];
 
-    if (playedCardColor == 'WILD') {
-        const chooseColorEmbed = new MessageEmbed();
-        chooseColorEmbed.setTitle('Choose a Color!')
-            .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
-            .setColor('WHITE')
-            .setDescription(`You played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}!\n
-            What color do you want it to be?
-            `);
-        const filter = (interaction) => {return true;}
-        const chooseColorRow = new MessageActionRow().addComponents(
-            new MessageButton()
-                .setCustomId('BLUE')
-                .setLabel('Blue')
-                .setStyle('PRIMARY'),
-            new MessageButton()
-                .setCustomId('RED')
-                .setLabel('Red')
-                .setStyle('DANGER'),
-            new MessageButton()
-                .setCustomId('GREEN')
-                .setLabel('Green')
-                .setStyle('SUCCESS'),
-            new MessageButton()
-                .setCustomId('YELLOW')
-                .setLabel('Yellow')
-                .setStyle('SECONDARY')
-        );
-        message.channel.send({embeds: [chooseColorEmbed], components: [chooseColorRow]});
-        let collector = message.channel.createMessageComponentCollector({filter,max:1});
+//     if (playedCardColor == 'WILD') {
+//         const chooseColorEmbed = new MessageEmbed();
+//         chooseColorEmbed.setTitle('Choose a Color!')
+//             .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+//             .setColor('WHITE')
+//             .setDescription(`You played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}!\n
+//             What color do you want it to be?
+//             `);
+//         const filter = (interaction) => {return true;}
+//         const chooseColorRow = new MessageActionRow().addComponents(
+//             new MessageButton()
+//                 .setCustomId('BLUE')
+//                 .setLabel('Blue')
+//                 .setStyle('PRIMARY'),
+//             new MessageButton()
+//                 .setCustomId('RED')
+//                 .setLabel('Red')
+//                 .setStyle('DANGER'),
+//             new MessageButton()
+//                 .setCustomId('GREEN')
+//                 .setLabel('Green')
+//                 .setStyle('SUCCESS'),
+//             new MessageButton()
+//                 .setCustomId('YELLOW')
+//                 .setLabel('Yellow')
+//                 .setStyle('SECONDARY')
+//         );
+//         message.channel.send({embeds: [chooseColorEmbed], components: [chooseColorRow]});
+//         let collector = message.channel.createMessageComponentCollector({filter,max:1});
 
-        collector.on('collect', async (ButtonInteraction) => {
-            let newColor = ButtonInteraction.customId.toLowerCase();
-            newColor = newColor.charAt(0).toUpperCase() + newColor.slice(1, newColor.length);
-            ButtonInteraction.reply(`You picked ${newColor}`);
-            const id = ButtonInteraction.customId;
-            UnoConfig.currentCard = `${ButtonInteraction.customId}.${playedCardValue}`;
-        });
-        collector.on('end', (collection) => {
-            const channelEmbed = new MessageEmbed();
-            channelEmbed.setColor('GREEN')
-                .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
-                .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
-                .setDescription(`${message.author.username} has played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
+//         collector.on('collect', async (ButtonInteraction) => {
+//             let newColor = ButtonInteraction.customId.toLowerCase();
+//             newColor = newColor.charAt(0).toUpperCase() + newColor.slice(1, newColor.length);
+//             ButtonInteraction.reply(`You picked ${newColor}`);
+//             const id = ButtonInteraction.customId;
+//             UnoConfig.currentCard = `${ButtonInteraction.customId}.${playedCardValue}`;
+//         });
+//         collector.on('end', (collection) => {
+//             const channelEmbed = new MessageEmbed();
+//             channelEmbed.setColor('GREEN')
+//                 .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+//                 .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+//                 .setDescription(`${message.author.username} has played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
 
 
-            Game.removeCard(playedCard.split('d')[1], message.author.id);
-            Game.getNextPlayer(card);
-            Game.turn(client);
-            return 0; 
-        });
-    } else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
-        console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
-        Game.getNextPlayer(card);
-        return 1;
-    } else {
-        console.log('not playable');
-        return -1;
-    }
-}
+//             Game.removeCard(playedCard.split('d')[1], message.author.id);
+//             Game.getNextPlayer(card);
+//             Game.turn(client);
+//             return 0; 
+//         });
+//     } else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
+//         console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
+//         Game.getNextPlayer(card);
+//         return 1;
+//     } else {
+//         console.log('not playable');
+//         return -1;
+//     }
+// }

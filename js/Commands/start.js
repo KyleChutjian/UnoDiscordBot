@@ -15,7 +15,6 @@ module.exports = new Command({
         let playerList = "";
         UnoConfig.channelId = message.channel.id;
         const embed = new MessageEmbed();
-        console.log(embed);
 
         embed.setColor('RED')
             .setThumbnail(client.user.avatarURL({dynamic:true}))
