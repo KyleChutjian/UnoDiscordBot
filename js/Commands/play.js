@@ -1,7 +1,7 @@
 const Command = require('../Structures/Command.js');
 const {Client, MessageEmbed, MessageActionRow, MessageButton, ButtonInteraction} = require('discord.js');
 const Game = require('../Structures/Game.js');
-const UnoConfig = require('../Data/uno.json')
+const UnoConfig = require('../Data/uno.json');
 
 module.exports = new Command({
     name: "play",
@@ -11,6 +11,26 @@ module.exports = new Command({
     async run(message, args, client) {
         const embed = new MessageEmbed();
         embed.setAuthor(message.author.username, message.author.avatarURL({dynamic:true}));
+
+        // const filter = (interaction) => {return true;}
+        // let collector = message.channel.createMessageComponentCollector({filter,max:2});
+        // collector.on('collect', async (ButtonInteraction) => {
+        //     console.log('test')
+        //     switch (ButtonInteraction.customId) {
+        //         case "DRAW":
+        //             console.log('draw');
+        //             Draw.run(message, null, client);
+        //             break;
+        //         case "UNO":
+        //             console.log('uno');
+        //             break;
+        //     }
+        // });
+
+
+
+
+
 
         // Not current player's turn
         if (!UnoConfig.players[message.author.id].playerNumber == UnoConfig.playerOrder[0]) {
@@ -44,8 +64,8 @@ module.exports = new Command({
             return;
         } else if (outcome == 1 && UnoConfig.players[message.author.id].hand.length == 2) {
             console.log(`${UnoConfig.players[message.author.id].username} uno`);
+
         }
-        
         
         // NOT wild/+4
         if (outcome == 1 && UnoConfig.players[message.author.id].hand.length > 1) {

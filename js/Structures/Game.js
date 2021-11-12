@@ -1,7 +1,8 @@
 const Card = require('../Structures/Card.js');
 const UnoConfig = require('../Data/uno.json');
 const Player = require('../Structures/Player.js');
-const { MessageEmbed, MessageActionRow, MessageButton, CommandInteractionOptionResolver } = require('discord.js');
+const Draw = require('../Commands/draw.js');
+const { MessageEmbed, MessageActionRow, MessageButton, CommandInteractionOptionResolver, MessageCollector, ButtonInteraction } = require('discord.js');
 let players = [];
 
 function turn(client, playedCard) {
@@ -71,13 +72,58 @@ function turn(client, playedCard) {
             });
             const row = new MessageActionRow().addComponents(
                 new MessageButton()
-                    .setCustomId('draw')
+                    .setCustomId('DRAW')
                     .setLabel('Draw')
                     .setStyle('PRIMARY')
             );
-            // sends private message
-            client.users.cache.get(player).send({embeds: [embed]});
 
+            if (currentPlayer.hand.length == 2) {
+                console.log(`${currentPlayer.username} Uno.`);
+                row.addComponents(
+                    new MessageButton()
+                        .setCustomId('UNO')
+                        .setLabel('Uno')
+                        .setStyle('DANGER'));
+            }
+
+
+            const filter = (interaction) => {return true;}
+            promise = client.users.cache.get(player).send('t').then(promiseObject => {
+                console.log(promiseObject);
+                console.log(promise);
+                console.log(`Debug:
+                1: ${promiseObject[0]}
+                2: ${promiseObject.Message}
+                3: ${promiseObject.message}
+                4: ${promiseObject.channelId}
+                `)
+
+                client.channels.fetch(promiseObject.channelId).then(channel => {
+                    let collector = channel.createMessageComponentCollector({filter, max:2});
+                    collector.on('collect', async (ButtonInteraction) => {
+                        console.log(ButtonInteraction.customId);
+                        switch (ButtonInteraction.customId) {
+                            case 'DRAW':
+                                ButtonInteraction.reply('You chose to draw a card');
+                                console.log(row.components[0]);
+                                row.components[0].setDisabled(true);
+                                row.components[0].disabled = true;
+                                console.log(row.components[0]);
+                                // Draw.run(message, args, client);
+                                break;
+                            case 'UNO':
+                                ButtonInteraction.reply('You said Uno');
+                                break;
+                        }
+
+                    })
+
+
+                });
+            })
+
+            // sends private message
+            client.users.cache.get(player).send({embeds: [embed], components:[row]});
             // This only happens once, if the first card is a wild
             if (UnoConfig.currentCard == "WILD.WILD") {
                 const chooseColorEmbed = new MessageEmbed();

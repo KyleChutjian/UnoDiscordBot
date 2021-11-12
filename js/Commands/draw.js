@@ -35,13 +35,6 @@ module.exports = new Command({
                     let card = getRandomCard();
                     embed.setDescription(`You drew a ${printCard(card)}`);
 
-
-
-
-
-
-                
-
                     if (isCardPlayable(card)) {
                         const filter = (interaction) => {return true;}
                         const drawCardRow = new MessageActionRow().addComponents(

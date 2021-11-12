@@ -132,8 +132,8 @@ function join(message, args, client, ButtonInteraction) {
                         UnoConfig.players[ButtonInteraction.user.id] = {
                             "username": ButtonInteraction.user.username,
                             "playerNumber": UnoConfig.playerCount,
-                            "hand": [null, null, null, null, null, null, null]
-                            // "hand": [null, null] // for testing win condition
+                            // "hand": [null, null, null, null, null, null, null]
+                            "hand": [null, null, null] // for testing win condition
                         }
                     }
                     return true;
