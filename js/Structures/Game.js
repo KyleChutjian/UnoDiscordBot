@@ -89,14 +89,14 @@ function turn(client, playedCard) {
 
             const filter = (interaction) => {return true;}
             promise = client.users.cache.get(player).send('t').then(promiseObject => {
-                console.log(promiseObject);
-                console.log(promise);
-                console.log(`Debug:
-                1: ${promiseObject[0]}
-                2: ${promiseObject.Message}
-                3: ${promiseObject.message}
-                4: ${promiseObject.channelId}
-                `)
+                // console.log(promiseObject);
+                // console.log(promise);
+                // console.log(`Debug:
+                // 1: ${promiseObject[0]}
+                // 2: ${promiseObject.Message}
+                // 3: ${promiseObject.message}
+                // 4: ${promiseObject.channelId}
+                // `)
 
                 client.channels.fetch(promiseObject.channelId).then(channel => {
                     let collector = channel.createMessageComponentCollector({filter, max:2});
@@ -105,11 +105,12 @@ function turn(client, playedCard) {
                         switch (ButtonInteraction.customId) {
                             case 'DRAW':
                                 ButtonInteraction.reply('You chose to draw a card');
-                                console.log(row.components[0]);
-                                row.components[0].setDisabled(true);
-                                row.components[0].disabled = true;
-                                console.log(row.components[0]);
-                                // Draw.run(message, args, client);
+                                // console.log(row.components[0]);
+                                // row.components[0].setDisabled(true);
+                                // row.components[0].disabled = true;
+                                // console.log(row.components[0]);
+                                draw(client, channel);
+                                // Draw.run(null, null, client);
                                 break;
                             case 'UNO':
                                 ButtonInteraction.reply('You said Uno');
@@ -397,6 +398,7 @@ function isCardPlayable(playedCard, message, client) {
     }
 }
 
+// Same as isCardPlayable, but for drawed cards
 function isDrawedCardPlayable(playedCard, message, client) {
     // "card4" => 4 => "RED" and "3"
     const playedCardColor = playedCard.split('.')[0];
@@ -461,6 +463,135 @@ function isDrawedCardPlayable(playedCard, message, client) {
     } 
 }
 
+// Same as isDrawedCardPlayable, but without message availability
+function isButtonDrawPlayable(playedCard, client, player, playerId, channel) {
+    // "card4" => 4 => "RED" and "3"
+    const playedCardColor = playedCard.split('.')[0];
+    const playedCardValue = playedCard.split('.')[1];
+
+    console.log(`${playedCard}, ${UnoConfig.currentCard}`);
+    if (playedCardColor == 'WILD') {
+        const chooseColorEmbed = new MessageEmbed();
+        chooseColorEmbed.setTitle('Choose a Color!')
+            .setAuthor(player.username, client.users.cache.get(playerId).avatarURL({dynamic: true}))
+            .setColor('WHITE')
+            .setDescription(`You played a ${printCard(playedCard)}!\n
+            What color do you want it to be?
+            `);
+        const filter = (interaction) => {return true;}
+        const chooseColorRow = new MessageActionRow().addComponents(
+            new MessageButton()
+                .setCustomId('BLUE')
+                .setLabel('Blue')
+                .setStyle('PRIMARY'),
+            new MessageButton()
+                .setCustomId('RED')
+                .setLabel('Red')
+                .setStyle('DANGER'),
+            new MessageButton()
+                .setCustomId('GREEN')
+                .setLabel('Green')
+                .setStyle('SUCCESS'),
+            new MessageButton()
+                .setCustomId('YELLOW')
+                .setLabel('Yellow')
+                .setStyle('SECONDARY')
+        );
+        channel.send({embeds: [chooseColorEmbed], components: [chooseColorRow]});
+        let collector = channel.createMessageComponentCollector({filter,max:1});
+
+        collector.on('collect', async (ButtonInteraction) => {
+            let newColor = ButtonInteraction.customId.toLowerCase();
+            newColor = newColor.charAt(0).toUpperCase() + newColor.slice(1, newColor.length);
+            ButtonInteraction.reply(`You picked ${newColor}`);
+            const id = ButtonInteraction.customId;
+            UnoConfig.currentCard = `${ButtonInteraction.customId}.${playedCardValue}`;
+        });
+        collector.on('end', (collection) => {
+            const channelEmbed = new MessageEmbed();
+            channelEmbed.setColor('GREEN')
+                .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+                .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+                .setDescription(`${message.author.username} has played a ${printCard(playedCard)}`);
+
+
+            removeCard(playedCard.split('d')[1], playerId);
+            getNextPlayer(playedCard);
+            turn(client);
+            return 0; 
+        });
+    } else {
+        // console.log(`${message.author.username} played a ${printCard(playedCard)}`);
+        getNextPlayer(playedCard);
+        return 1;
+    } 
+}
+
+// Button version of Draw command with no message availability
+function draw(client, channel) {
+    let currentPlayerId;
+    let currentPlayer;
+    for (player in UnoConfig.players) {
+        if (UnoConfig.playerOrder[0] === UnoConfig.players[player].playerNumber) {
+            currentPlayerId = player;
+            currentPlayer = UnoConfig.players[player]
+
+        }
+    }
+
+    const embed = new MessageEmbed();
+    embed.setTitle('Success!')
+        .setAuthor(currentPlayer.username, client.users.cache.get(currentPlayerId).avatarURL({dynamic: true}))
+        .setColor('GREEN');
+
+    let card = getRandomCard();
+    embed.setDescription(`You drew a ${printCard(card)}`);
+
+    if (isCardPlayable(card)) {
+        let card = getRandomCard();
+        embed.setDescription(`You drew a ${printCard(card)}`);
+
+        if (isCardPlayable(card)) {
+            const filter = (interaction) => {return true;}
+            const drawCardRow = new MessageActionRow().addComponents(
+                new MessageButton()
+                    .setCustomId('PLAY')
+                    .setLabel('Play')
+                    .setStyle('PRIMARY'),
+                new MessageButton()
+                    .setCustomId('KEEP')
+                    .setLabel('Keep')
+                    .setStyle('SECONDARY'));
+
+            embed.setDescription(embed.description + `\nPlay the ${printCard(card)}?`);
+            channel.send({embeds: [embed], components: [drawCardRow]});
+            let collector = channel.createMessageComponentCollector({filter, max:1});
+            collector.on('collect', async (ButtonInteraction) => {
+                if (ButtonInteraction.customId == 'PLAY') {
+                    const outcome = isButtonDrawPlayable(card, client, currentPlayer, currentPlayerId, channel)
+                    if (outcome == 1) {
+                        console.log(1);
+                        embed.setColor('GREEN')
+                            .setTitle('Success!')
+                            .setDescription(`You played a ${card}`);
+            
+                        const channelEmbed = new MessageEmbed();
+                        channelEmbed.setColor('GREEN')
+                            .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+                            .setAuthor(currentPlayer.username, client.users.cache.get(currentPlayerId).avatarURL({dynamic: true}))
+                            .setDescription(`${currentPlayer.username} has played a ${printCard(card)}`);
+                        UnoConfig.currentCard = card;
+                        getNextPlayer(card)
+                        turn(client, card);
+                    } else {return}
+                }
+            }) 
+        }
+
+
+    }
+}
+
 // NEEDS FIXING
 // resets configs
 function resetGame() {
@@ -485,4 +616,3 @@ module.exports.removeCard = removeCard;
 module.exports.getCardFromIndex = getCardFromIndex;
 module.exports.printCard = printCard;
 module.exports.turn = turn;
-

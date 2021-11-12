@@ -8,7 +8,23 @@ module.exports = new Command({
     permission: "SEND_MESSAGES",
     description: "Draws a card from the top of the deck",
 
-    async run(message, args, client) {
+    run(message, args, client) {
+        // let channel;
+        // if (message == null) {
+        //     for (player in UnoConfig.players) {
+        //         if (UnoConfig.playerOrder[0] === UnoConfig.players[player].playerNumber) {
+        //             promise = client.users.cache.get(player).send('t').then(promiseObject => {
+        //                 channel = promise.channel;
+        //                 console.log(channel);
+        //             })
+        //         }
+        //     }
+            
+        // } else {
+        //     channel = message.channel;
+        // }
+
+
         const embed = new MessageEmbed();
         embed.setTitle(`Success!`)
             .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
