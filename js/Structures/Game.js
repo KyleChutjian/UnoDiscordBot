@@ -70,61 +70,64 @@ function turn(client, playedCard) {
                 cardNumber++;
                 embed.addField(`card${cardNumber}`,printCard(card),true);
             });
-            const row = new MessageActionRow().addComponents(
-                new MessageButton()
-                    .setCustomId('DRAW')
-                    .setLabel('Draw')
-                    .setStyle('PRIMARY')
-            );
 
-            if (currentPlayer.hand.length == 2) {
-                console.log(`${currentPlayer.username} Uno.`);
-                row.addComponents(
-                    new MessageButton()
-                        .setCustomId('UNO')
-                        .setLabel('Uno')
-                        .setStyle('DANGER'));
-            }
+            /* Archived code for draw and "say uno" buttons:
+             * For future reference: it doesn't work right now because the only way to create a message
+             * component collector in a DM channel is to send a message which returns a promise, and then
+             * use that promise to access the channel object where you can do createMessageComponentCollector.
 
+             * I can't find a way to access this collector after your turn is over, so when you try to draw
+             * after turn 1, it tries to make a second component collector in player1's dm channel, throwing
+             * an error. */ 
 
-            const filter = (interaction) => {return true;}
-            promise = client.users.cache.get(player).send('t').then(promiseObject => {
-                // console.log(promiseObject);
-                // console.log(promise);
-                // console.log(`Debug:
-                // 1: ${promiseObject[0]}
-                // 2: ${promiseObject.Message}
-                // 3: ${promiseObject.message}
-                // 4: ${promiseObject.channelId}
-                // `)
+            // const row = new MessageActionRow().addComponents(
+            //     new MessageButton()
+            //         .setCustomId('DRAW')
+            //         .setLabel('Draw')
+            //         .setStyle('PRIMARY')
+            // );
 
-                client.channels.fetch(promiseObject.channelId).then(channel => {
-                    let collector = channel.createMessageComponentCollector({filter, max:2});
-                    collector.on('collect', async (ButtonInteraction) => {
-                        console.log(ButtonInteraction.customId);
-                        switch (ButtonInteraction.customId) {
-                            case 'DRAW':
-                                ButtonInteraction.reply('You chose to draw a card');
-                                // console.log(row.components[0]);
-                                // row.components[0].setDisabled(true);
-                                // row.components[0].disabled = true;
-                                // console.log(row.components[0]);
-                                draw(client, channel);
-                                // Draw.run(null, null, client);
-                                break;
-                            case 'UNO':
-                                ButtonInteraction.reply('You said Uno');
-                                break;
-                        }
-
-                    })
+            // if (currentPlayer.hand.length == 2) {
+            //     console.log(`${currentPlayer.username} Uno.`);
+            //     row.addComponents(
+            //         new MessageButton()
+            //             .setCustomId('UNO')
+            //             .setLabel('Uno')
+            //             .setStyle('DANGER'));
+            // }
 
 
-                });
-            })
+            // const filter = (interaction) => {return true;}
+            // promise = client.users.cache.get(player).send('t').then(promiseObject => {
+            //     client.channels.fetch(promiseObject.channelId).then(channel => {
+            //         console.log(channel);
+            //         let collector = channel.createMessageComponentCollector({filter, max:2});
+            //         collector.on('collect', async (ButtonInteraction) => {
+            //             console.log(ButtonInteraction.customId);
+            //             switch (ButtonInteraction.customId) {
+            //                 case 'DRAW':
+            //                     // console.log(ButtonInteraction);
+            //                     ButtonInteraction.reply('You chose to draw a card');
+            //                     // console.log(row.components[0]);
+            //                     // row.components[0].setDisabled(true);
+            //                     // row.components[0].disabled = true;
+            //                     // console.log(row.components[0]);
+            //                     draw(client, channel);
+            //                     // Draw.run(null, null, client);
+            //                     break;
+            //                 case 'UNO':
+            //                     ButtonInteraction.reply('You said Uno');
+            //                     break;
+            //             }
+            //         })
+            //         console.log(channel);
+            //     });
+            // })
 
             // sends private message
-            client.users.cache.get(player).send({embeds: [embed], components:[row]});
+            client.users.cache.get(player).send({embeds: [embed]});
+            // For when buttons are fixed: 
+            // client.users.cache.get(player).send({embeds: [embed], components:[row]});
             // This only happens once, if the first card is a wild
             if (UnoConfig.currentCard == "WILD.WILD") {
                 const chooseColorEmbed = new MessageEmbed();
@@ -184,12 +187,50 @@ function turn(client, playedCard) {
             // start making embed that sends in this channel
             const embed2 = new MessageEmbed();
             embed2.setTitle(`It is ${currentPlayer.username}'s turn!`)
-                .setDescription(`The current card is a ${printCard(UnoConfig.currentCard)}.`)
-                // .setImage('https://raw.githubusercontent.com/Exium1/UnoBot/master/assets/images/defaultCards/red3.png')
+                .setDescription(`The current card is a ${printCard(UnoConfig.currentCard)}.
+                ${UnoConfig.players[getLastPlayerId()].username} has ${UnoConfig.players[getLastPlayerId()].hand.length} cards left.`)
                 .setImage(getCardImageLink(UnoConfig.currentCard))
                 .setColor(currentColor);
             
+            if (UnoConfig.players[getLastPlayerId()].hand.length == 2) {
+                UnoConfig.players[getLastPlayerId()].saidUno = false;
+                console.log(UnoConfig.players[getLastPlayerId()].saidUno);
+            }
+            
+
+            if (UnoConfig.players[getLastPlayerId()].hand.length == 1) {
+                if (UnoConfig.players[getLastPlayerId()].saidUno) {
+                    console.log(`${UnoConfig.players[getLastPlayerId()].username} said Uno`);
+                    embed2.setDescription(embed2.description + `
+                    ${UnoConfig.players[getLastPlayerId()].username} has said Uno!`);
+                } else {
+                    console.log(`${UnoConfig.players[getLastPlayerId()].username} did not say Uno`);
+                    // Add this in?
+                    // embed2.setDescription(embed2.description + `
+                    // ${UnoConfig.players[getLastPlayerId()].username} has not said Uno!`);
+                }
+
+
+                
+            }
+
             client.channels.cache.get(UnoConfig.channelId).send({embeds: [embed2]});
+        }
+    }
+}
+
+function getCurrentPlayerId() {
+    for (player in UnoConfig.players) {
+        if (UnoConfig.players[player].playerNumber == UnoConfig.playerOrder[0]) {
+            return player;
+        }
+    }
+}
+
+function getLastPlayerId() {
+    for (player in UnoConfig.players) {
+        if (UnoConfig.players[player].playerNumber == UnoConfig.playerOrder[UnoConfig.playerOrder.length-1]) {
+            return player;
         }
     }
 }
@@ -398,13 +439,31 @@ function isCardPlayable(playedCard, message, client) {
     }
 }
 
+// Returns True/False
+function isCardPlayableTF(card) {
+    const drawCardColor = card.split('.')[0];
+    const drawCardValue = card.split('.')[1];
+    const currentCardColor = UnoConfig.currentCard.split('.')[0];
+    const currentCardValue = UnoConfig.currentCard.split('.')[1];
+
+    console.log(`${card}, ${UnoConfig.currentCard}`);
+
+    if (drawCardColor == currentCardColor || drawCardValue == currentCardValue || drawCardColor == 'WILD') {
+        console.log(`A ${printCard(card)} is playable on a ${printCard(UnoConfig.currentCard)}`);
+        return true;
+    } else {
+        console.log(`A ${printCard(card)} is not playable on a ${printCard(UnoConfig.currentCard)}`);
+        return false;
+    }
+}
+
 // Same as isCardPlayable, but for drawed cards
 function isDrawedCardPlayable(playedCard, message, client) {
     // "card4" => 4 => "RED" and "3"
     const playedCardColor = playedCard.split('.')[0];
     const playedCardValue = playedCard.split('.')[1];
-    // const currentCardColor = UnoConfig.currentCard.split('.')[0];
-    // const currentCardValue = UnoConfig.currentCard.split('.')[1];
+    const currentCardColor = UnoConfig.currentCard.split('.')[0];
+    const currentCardValue = UnoConfig.currentCard.split('.')[1];
     console.log(`${playedCard}, ${UnoConfig.currentCard}`);
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
@@ -456,11 +515,27 @@ function isDrawedCardPlayable(playedCard, message, client) {
             turn(client);
             return 0; 
         });
-    } else {
+    } else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
         console.log(`${message.author.username} played a ${printCard(playedCard)}`);
         getNextPlayer(playedCard);
         return 1;
-    } 
+    } else {
+        console.log('draw card not playable');
+        return -1;
+    }
+
+    /* 
+    
+    else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
+        console.log(`${message.author.username} played a ${printCard(getCardFromIndex(playedCard,message.author.id))}`);
+        getNextPlayer(card);
+        return 1;
+    } else {
+        console.log('not playable');
+        return -1;
+    }
+    
+    */
 }
 
 // Same as isDrawedCardPlayable, but without message availability
@@ -535,7 +610,6 @@ function draw(client, channel) {
         if (UnoConfig.playerOrder[0] === UnoConfig.players[player].playerNumber) {
             currentPlayerId = player;
             currentPlayer = UnoConfig.players[player]
-
         }
     }
 
@@ -547,48 +621,51 @@ function draw(client, channel) {
     let card = getRandomCard();
     embed.setDescription(`You drew a ${printCard(card)}`);
 
-    if (isCardPlayable(card)) {
+    if (isCardPlayableTF(card)) {
         let card = getRandomCard();
         embed.setDescription(`You drew a ${printCard(card)}`);
 
-        if (isCardPlayable(card)) {
-            const filter = (interaction) => {return true;}
-            const drawCardRow = new MessageActionRow().addComponents(
-                new MessageButton()
-                    .setCustomId('PLAY')
-                    .setLabel('Play')
-                    .setStyle('PRIMARY'),
-                new MessageButton()
-                    .setCustomId('KEEP')
-                    .setLabel('Keep')
-                    .setStyle('SECONDARY'));
+        const filter = (interaction) => {return true;}
+        const drawCardRow = new MessageActionRow().addComponents(
+            new MessageButton()
+                .setCustomId('PLAY')
+                .setLabel('Play')
+                .setStyle('PRIMARY'),
+            new MessageButton()
+                .setCustomId('KEEP')
+                .setLabel('Keep')
+                .setStyle('SECONDARY'));
 
-            embed.setDescription(embed.description + `\nPlay the ${printCard(card)}?`);
-            channel.send({embeds: [embed], components: [drawCardRow]});
-            let collector = channel.createMessageComponentCollector({filter, max:1});
-            collector.on('collect', async (ButtonInteraction) => {
-                if (ButtonInteraction.customId == 'PLAY') {
-                    const outcome = isButtonDrawPlayable(card, client, currentPlayer, currentPlayerId, channel)
-                    if (outcome == 1) {
-                        console.log(1);
-                        embed.setColor('GREEN')
-                            .setTitle('Success!')
-                            .setDescription(`You played a ${card}`);
-            
-                        const channelEmbed = new MessageEmbed();
-                        channelEmbed.setColor('GREEN')
-                            .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
-                            .setAuthor(currentPlayer.username, client.users.cache.get(currentPlayerId).avatarURL({dynamic: true}))
-                            .setDescription(`${currentPlayer.username} has played a ${printCard(card)}`);
-                        UnoConfig.currentCard = card;
-                        getNextPlayer(card)
-                        turn(client, card);
-                    } else {return}
-                }
-            }) 
-        }
+        embed.setDescription(embed.description + `\nPlay the ${printCard(card)}?`);
+        channel.send({embeds: [embed], components: [drawCardRow]});
+        let collector = channel.createMessageComponentCollector({filter, max:1});
+        collector.on('collect', async (ButtonInteraction) => {
+            if (ButtonInteraction.customId == 'PLAY') {
+                const outcome = isButtonDrawPlayable(card, client, currentPlayer, currentPlayerId, channel)
+                if (outcome == 1) {
+                    embed.setColor('GREEN')
+                        .setTitle('Success!')
+                        .setDescription(`You played a ${card}`);
+        
+                    const channelEmbed = new MessageEmbed();
+                    channelEmbed.setColor('GREEN')
+                        .setTitle(`It is Player ${UnoConfig.playerOrder[0]}'s turn!`)
+                        .setAuthor(currentPlayer.username, client.users.cache.get(currentPlayerId).avatarURL({dynamic: true}))
+                        .setDescription(`${currentPlayer.username} has played a ${printCard(card)}`);
+                    UnoConfig.currentCard = card;
+                    getNextPlayer(card)
+                    turn(client, card);
+                } else {return}
+            }
+        }) 
+        
 
 
+    } else {
+        channel.send({embeds: [embed]});
+        UnoConfig.players[currentPlayerId].hand.push(card);
+        getNextPlayer('NULL.NULL');
+        turn(client, null);
     }
 }
 
@@ -605,6 +682,8 @@ function resetGame() {
     playerList = "";
 }
 
+module.exports.getLastPlayerId = getLastPlayerId;
+module.exports.getCurrentPlayerId = getCurrentPlayerId;
 module.exports.isDrawedCardPlayable = isDrawedCardPlayable;
 module.exports.isCardPlayable = isCardPlayable;
 module.exports.getCardImageLink = getCardImageLink;
