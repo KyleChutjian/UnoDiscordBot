@@ -15,7 +15,7 @@ module.exports = new Command({
         fs.readdirSync('./js/Commands')
             .filter(file => file.endsWith('.js'))
             .forEach(file => {
-                commandList += `\n - \`.` + file.substring(0,file.length - 3) + `\``
+                commandList += `\n\`.` + file.substring(0,file.length - 3) + `\``
             })
 
         const embed = new MessageEmbed();
@@ -25,7 +25,12 @@ module.exports = new Command({
             .setDescription(`
                 The Uno Bot prefix is: \`${config.prefix}\`\n
                 Type \`.start\` to start a game!\n
-                Command List: ${commandList}`)
+                Command List: ${commandList}\n
+                \*\*How To Play:\*\*
+                 \*\*1.\*\* Have one person type \`.start\` in a Discord server
+                 \*\*2.\*\* Have 2-6 players click the \"Join\" button to join the game
+                 \*\*3.\*\* Have 1 player click the \"Start\" button to start the game
+                 \*\*4.\*\* Everyone will be messaged their initial hand, and the game will begin!`)
             .setColor('RED')
             .setThumbnail(client.user.avatarURL({dynamic:true}))
 

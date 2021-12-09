@@ -74,7 +74,7 @@ module.exports = new Command({
                             content: `${ButtonInteraction.user.username} has started the game!`,
                         });
                         UnoConfig.currentState = "PLAYING";
-                        pregame(client);
+                        pregame(client, message);
                         break;
                     case 'stop':
                         ButtonInteraction.reply({
@@ -90,7 +90,7 @@ module.exports = new Command({
         })
         collector.on('end', (collection) => {
             UnoConfig.currentState = "PLAYING";
-            pregame(client);
+            pregame(client, message);
             message.channel.send('interaction end');
             collector.stop();
         })
@@ -99,20 +99,82 @@ module.exports = new Command({
 
 });
 
-function pregame(client) {
+function pregame(client, message) {
     let players = [];
     switch (UnoConfig.currentState) {
         case "WAITING", "JOINING":
             console.log('cant do that now'); 
             break;
         case "PLAYING":
+            UnoConfig.currentCard = Game.getRandomCard();
+
+            switch (UnoConfig.currentCard.split('.')[1]) {
+                case "REVERSE":
+                    UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
+                    break;
+                case "PLUSTWO":
+                    for (player in UnoConfig.players) {
+                        if (UnoConfig.players[player].playerNumber == 1) {
+                            UnoConfig.players[player].hand.push(Game.getRandomCard());
+                            UnoConfig.players[player].hand.push(Game.getRandomCard());
+                        }
+                    }
+                    break;
+                case "SKIP":
+                    UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+                    break;
+                case "WILD":
+                    break;
+                case "PLUSFOUR":
+                    break;
+            }
+    
+    
+            if (UnoConfig.currentCard.split('.')[0] == "WILD") {
+                UnoConfig.currentCard = Game.getRandomCard();
+            } 
+
+
+
             let currentCard = 0;
             for (player in UnoConfig.players) {
                 currentCard = 0;
                 UnoConfig.players[player].hand.forEach(card => {
                     UnoConfig.players[player].hand[currentCard] = Game.getRandomCard();
                     currentCard++;
-                })
+                });
+                if (UnoConfig.playerOrder[0] != UnoConfig.players[player].playerNumber) {
+                    // client.users.cache.get(player).send('test');
+                    const initialEmbed = new MessageEmbed();
+                    initialEmbed.setTitle('')
+                    let currentcolor = "";
+                    switch (UnoConfig.currentCard.split('.')[0]) {
+                        case "RED":
+                        case "BLUE":
+                        case "GREEN":
+                        case "YELLOW":
+                            currentColor = UnoConfig.currentCard.split('.')[0];
+                            break;
+                        default:
+                            currentColor = 'WHITE'; // for setColor 
+                    }
+                    initialEmbed.setTitle(`${UnoConfig.players[player].username}'s hand`)
+                        .setAuthor(UnoConfig.players[player].username, client.users.cache.get(player).avatarURL({dynamic:true}))
+                        .setDescription(`Type \`.play card[number]\` to play a card.\n
+                        Type \`.draw\` to draw a card.`)
+                        .setImage(Game.getCardImageLink(UnoConfig.currentCard))
+                        .setColor(currentColor)
+                        .setFooter('Current Card')
+                    
+                    let cardNumber = 0;
+                    UnoConfig.players[player].hand.forEach(card => {
+                        cardNumber++;
+                        initialEmbed.addField(`card${cardNumber}`, Game.printCard(card),true);
+                    });
+                    client.users.cache.get(player).send({embeds: [initialEmbed]});
+
+
+                }
                 
             }
             Game.turn(client, null);
@@ -132,8 +194,8 @@ function join(message, args, client, ButtonInteraction) {
                         UnoConfig.players[ButtonInteraction.user.id] = {
                             "username": ButtonInteraction.user.username,
                             "playerNumber": UnoConfig.playerCount,
-                            // "hand": [null, null, null, null, null, null, null]
-                            "hand": [null, null, null], // for testing win condition
+                            "hand": [null, null, null, null, null, null, null],
+                            // "hand": [null, null, null], // for testing win condition
                             "saidUno": false
                         }
                     }

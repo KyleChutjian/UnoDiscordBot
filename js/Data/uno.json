@@ -15,7 +15,7 @@
     "currentState": "WAITING",
     "direction": true,
     "channelId": null,
-
+    "lastPlayer": null,
 
 
 

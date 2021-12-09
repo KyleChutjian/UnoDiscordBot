@@ -8,35 +8,35 @@ let players = [];
 function turn(client, playedCard) {
     if (UnoConfig.currentState != "PLAYING") return;
 
-    if (UnoConfig.currentCard == null) {
-        UnoConfig.currentCard = getRandomCard();
+    // if (UnoConfig.currentCard == null) {
+    //     UnoConfig.currentCard = getRandomCard();
 
-        switch (UnoConfig.currentCard.split('.')[1]) {
-            case "REVERSE":
-                UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
-                break;
-            case "PLUSTWO":
-                for (player in UnoConfig.players) {
-                    if (UnoConfig.players[player].playerNumber == 1) {
-                        UnoConfig.players[player].hand.push(getRandomCard());
-                        UnoConfig.players[player].hand.push(getRandomCard());
-                    }
-                }
-                break;
-            case "SKIP":
-                UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
-                break;
-            case "WILD":
-                break;
-            case "PLUSFOUR":
-                break;
-        }
+    //     switch (UnoConfig.currentCard.split('.')[1]) {
+    //         case "REVERSE":
+    //             UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
+    //             break;
+    //         case "PLUSTWO":
+    //             for (player in UnoConfig.players) {
+    //                 if (UnoConfig.players[player].playerNumber == 1) {
+    //                     UnoConfig.players[player].hand.push(getRandomCard());
+    //                     UnoConfig.players[player].hand.push(getRandomCard());
+    //                 }
+    //             }
+    //             break;
+    //         case "SKIP":
+    //             UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
+    //             break;
+    //         case "WILD":
+    //             break;
+    //         case "PLUSFOUR":
+    //             break;
+    //     }
 
 
-        if (UnoConfig.currentCard.split('.')[0] == "WILD") {
-            UnoConfig.currentCard = getRandomCard();
-        } 
-    }
+    //     if (UnoConfig.currentCard.split('.')[0] == "WILD") {
+    //         UnoConfig.currentCard = getRandomCard();
+    //     } 
+    // }
     
     let currentColor = "";
     switch (UnoConfig.currentCard.split('.')[0]) {
@@ -194,7 +194,6 @@ function turn(client, playedCard) {
             
             if (UnoConfig.players[getLastPlayerId()].hand.length == 2) {
                 UnoConfig.players[getLastPlayerId()].saidUno = false;
-                console.log(UnoConfig.players[getLastPlayerId()].saidUno);
             }
             
 
@@ -369,7 +368,17 @@ function getNextPlayer(card) {
 // Invalid:-1, Not Wild/+4:1, Wild/+4:0
 function isCardPlayable(playedCard, message, client) {
     // INVALID
-    if (playedCard == null || playedCard.toLowerCase() == 'card' || !playedCard.toLowerCase().startsWith('card')) {return -1;} else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {return -1;}
+    if (
+        playedCard == null || // nothing
+        playedCard.toLowerCase() == 'card' || // ".play card" with no number
+        isNaN(playedCard.split('d')[1]) || // ".play carde" if anything after 'card' is not a number
+        playedCard.split('d')[1] == 0 || // ".play card0" can't play your 0th card @someone
+        
+        !playedCard.toLowerCase().startsWith('card')    ) {
+            return -1;
+        } else if (playedCard.split('d')[1] > UnoConfig.players[message.author.id].hand.length) {
+            return -1;
+        }
     
     // "card4" => 4 => "RED" and "3"
     cardNumber = playedCard.split('d')[1];
@@ -378,7 +387,7 @@ function isCardPlayable(playedCard, message, client) {
     const playedCardValue = card.split('.')[1];
     const currentCardColor = UnoConfig.currentCard.split('.')[0];
     const currentCardValue = UnoConfig.currentCard.split('.')[1];
-    console.log(`${playedCard}, ${UnoConfig.currentCard}`);
+    // console.log(`${playedCard}, ${UnoConfig.currentCard}`); // debugging
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
         chooseColorEmbed.setTitle('Choose a Color!')
@@ -446,7 +455,7 @@ function isCardPlayableTF(card) {
     const currentCardColor = UnoConfig.currentCard.split('.')[0];
     const currentCardValue = UnoConfig.currentCard.split('.')[1];
 
-    console.log(`${card}, ${UnoConfig.currentCard}`);
+    // console.log(`${card}, ${UnoConfig.currentCard}`); // debugging
 
     if (drawCardColor == currentCardColor || drawCardValue == currentCardValue || drawCardColor == 'WILD') {
         console.log(`A ${printCard(card)} is playable on a ${printCard(UnoConfig.currentCard)}`);
@@ -464,7 +473,7 @@ function isDrawedCardPlayable(playedCard, message, client) {
     const playedCardValue = playedCard.split('.')[1];
     const currentCardColor = UnoConfig.currentCard.split('.')[0];
     const currentCardValue = UnoConfig.currentCard.split('.')[1];
-    console.log(`${playedCard}, ${UnoConfig.currentCard}`);
+    // console.log(`${playedCard}, ${UnoConfig.currentCard}`); // debugging
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
         chooseColorEmbed.setTitle('Choose a Color!')
@@ -523,19 +532,6 @@ function isDrawedCardPlayable(playedCard, message, client) {
         console.log('draw card not playable');
         return -1;
     }
-
-    /* 
-    
-    else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
-        console.log(`${message.author.username} played a ${printCard(getCardFromIndex(playedCard,message.author.id))}`);
-        getNextPlayer(card);
-        return 1;
-    } else {
-        console.log('not playable');
-        return -1;
-    }
-    
-    */
 }
 
 // Same as isDrawedCardPlayable, but without message availability
@@ -544,7 +540,7 @@ function isButtonDrawPlayable(playedCard, client, player, playerId, channel) {
     const playedCardColor = playedCard.split('.')[0];
     const playedCardValue = playedCard.split('.')[1];
 
-    console.log(`${playedCard}, ${UnoConfig.currentCard}`);
+    // console.log(`${playedCard}, ${UnoConfig.currentCard}`); // debugging
     if (playedCardColor == 'WILD') {
         const chooseColorEmbed = new MessageEmbed();
         chooseColorEmbed.setTitle('Choose a Color!')
@@ -596,7 +592,7 @@ function isButtonDrawPlayable(playedCard, client, player, playerId, channel) {
             return 0; 
         });
     } else {
-        // console.log(`${message.author.username} played a ${printCard(playedCard)}`);
+        // console.log(`${message.author.username} played a ${printCard(playedCard)}`); // more debugging
         getNextPlayer(playedCard);
         return 1;
     } 

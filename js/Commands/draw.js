@@ -9,22 +9,6 @@ module.exports = new Command({
     description: "Draws a card from the top of the deck",
 
     run(message, args, client) {
-        // let channel;
-        // if (message == null) {
-        //     for (player in UnoConfig.players) {
-        //         if (UnoConfig.playerOrder[0] === UnoConfig.players[player].playerNumber) {
-        //             promise = client.users.cache.get(player).send('t').then(promiseObject => {
-        //                 channel = promise.channel;
-        //                 console.log(channel);
-        //             })
-        //         }
-        //     }
-            
-        // } else {
-        //     channel = message.channel;
-        // }
-
-
         const embed = new MessageEmbed();
         embed.setTitle(`Success!`)
             .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
@@ -33,9 +17,9 @@ module.exports = new Command({
 
 
         const denyEmbed = new MessageEmbed();
-            denyEmbed.setTitle('Invalid!')
-                .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
-                .setColor('RED');
+        denyEmbed.setTitle('Invalid!')
+            .setAuthor(message.author.username, message.author.avatarURL({dynamic:true}))
+            .setColor('RED');
         switch (UnoConfig.currentState) {
             case "WAITING":
             case "JOINING":
@@ -48,6 +32,7 @@ module.exports = new Command({
                     denyEmbed.setDescription(`You cannot draw a card when it is not your turn!`);
                     message.channel.send({embeds: [denyEmbed]});
                 } else {
+                    UnoConfig.lastPlayer = message.author.id;
                     let card = getRandomCard();
                     embed.setDescription(`You drew a ${printCard(card)}`);
 
@@ -72,7 +57,6 @@ module.exports = new Command({
                             if (ButtonInteraction.customId == 'PLAY') {
                                 const outcome = Game.isDrawedCardPlayable(card, message, client);
                                 if (outcome == 1) {
-                                    console.log(1);
                                     embed.setColor('GREEN')
                                         .setTitle('Success!')
                                         .setDescription(`You played a ${card}`);
@@ -138,16 +122,6 @@ function isCardPlayable(card) {
     }
 
 }
-    /*
-        else if (playedCardColor == currentCardColor || playedCardValue == currentCardValue || playedCardColor == 'WILD') {
-        console.log(`${message.author.username} played a ${Game.printCard(Game.getCardFromIndex(playedCard,message.author.id))}`);
-        Game.getNextPlayer(card);
-        return 1;
-    } 
-
-
-    */
-
 
 // RED.3 => Red 3
 function printCard(card) {
