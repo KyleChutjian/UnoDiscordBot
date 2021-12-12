@@ -38,9 +38,6 @@ module.exports = new Command({
                         
                     };
                     UnoConfig.playerCount = 0;
-                    // for (player in UnoConfig.players) {
-                    //     UnoConfig.players[player] = [null, null];
-                    // }
                     UnoConfig.currentState = "WAITING";
                 break;
         }

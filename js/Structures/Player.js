@@ -2,6 +2,8 @@ const Card = require('../Structures/Card.js');
 const UnoConfig = require('../Data/uno.json');
 const playerHands = UnoConfig.playerHands;
 let id = 0;
+
+// Unused
 class Player {
     /**
      * 
@@ -11,11 +13,8 @@ class Player {
         this.id = player.id;
         this.username = player.username;
         this.playerNumber = player.playerNumber;
-        this.hand = generateStartingHand(this.id);
-        
+        this.hand = generateStartingHand(this.id);   
     }
-
-
 }
 
 function getJSONCardString(colorInt, valueInt) {

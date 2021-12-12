@@ -38,13 +38,3 @@ module.exports = new Command({
     }
 
 });
-
-/*
-
-    currentPlayer.hand.forEach(card => {
-        cardNumber++;
-        embed.addField(`card${cardNumber}`,printCard(card),true);
-    })
-
-
-*/

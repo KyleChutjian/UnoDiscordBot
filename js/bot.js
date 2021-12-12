@@ -6,4 +6,3 @@ const Game = require('./Structures/Game.js');
 const client = new Client();
 
 client.start(config.token);
-const UnoConfig = require('./Data/uno.json');

@@ -7,36 +7,6 @@ let players = [];
 
 function turn(client, playedCard) {
     if (UnoConfig.currentState != "PLAYING") return;
-
-    // if (UnoConfig.currentCard == null) {
-    //     UnoConfig.currentCard = getRandomCard();
-
-    //     switch (UnoConfig.currentCard.split('.')[1]) {
-    //         case "REVERSE":
-    //             UnoConfig.playerOrder = UnoConfig.playerOrder.reverse();
-    //             break;
-    //         case "PLUSTWO":
-    //             for (player in UnoConfig.players) {
-    //                 if (UnoConfig.players[player].playerNumber == 1) {
-    //                     UnoConfig.players[player].hand.push(getRandomCard());
-    //                     UnoConfig.players[player].hand.push(getRandomCard());
-    //                 }
-    //             }
-    //             break;
-    //         case "SKIP":
-    //             UnoConfig.playerOrder.push(UnoConfig.playerOrder.splice(0, 1)[0]);
-    //             break;
-    //         case "WILD":
-    //             break;
-    //         case "PLUSFOUR":
-    //             break;
-    //     }
-
-
-    //     if (UnoConfig.currentCard.split('.')[0] == "WILD") {
-    //         UnoConfig.currentCard = getRandomCard();
-    //     } 
-    // }
     
     let currentColor = "";
     switch (UnoConfig.currentCard.split('.')[0]) {
@@ -208,11 +178,7 @@ function turn(client, playedCard) {
                     // embed2.setDescription(embed2.description + `
                     // ${UnoConfig.players[getLastPlayerId()].username} has not said Uno!`);
                 }
-
-
-                
             }
-
             client.channels.cache.get(UnoConfig.channelId).send({embeds: [embed2]});
         }
     }
